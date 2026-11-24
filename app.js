@@ -1,13 +1,8 @@
-const products = [
-  {id:1,name:"Everyday Backpack",category:"Fashion",price:1450,emoji:"🎒"},
-  {id:2,name:"Classic Sneakers",category:"Fashion",price:2200,emoji:"👟"},
-  {id:3,name:"Wireless Headphones",category:"Tech",price:1850,emoji:"🎧"},
-  {id:4,name:"Smart Watch",category:"Tech",price:2750,emoji:"⌚"},
-  {id:5,name:"Desk Lamp",category:"Lifestyle",price:950,emoji:"💡"},
-  {id:6,name:"Travel Bottle",category:"Lifestyle",price:450,emoji:"🧴"},
-  {id:7,name:"Cotton T-shirt",category:"Fashion",price:650,emoji:"👕"},
-  {id:8,name:"Mini Speaker",category:"Tech",price:1250,emoji:"🔊"}
+const SAMPLE_PRODUCTS = [
+  {id:1,name:"Everyday Backpack",category:"Fashion",price:1450,emoji:"🎒"},{id:2,name:"Classic Sneakers",category:"Fashion",price:2200,emoji:"👟"},{id:3,name:"Wireless Headphones",category:"Tech",price:1850,emoji:"🎧"},{id:4,name:"Smart Watch",category:"Tech",price:2750,emoji:"⌚"},{id:5,name:"Desk Lamp",category:"Lifestyle",price:950,emoji:"💡"},{id:6,name:"Travel Bottle",category:"Lifestyle",price:450,emoji:"🧴"},{id:7,name:"Cotton T-shirt",category:"Fashion",price:650,emoji:"👕"},{id:8,name:"Mini Speaker",category:"Tech",price:1250,emoji:"🔊"}
 ];
+const PRODUCT_KEY="rar_store_products_v1";
+let products=(()=>{try{const p=JSON.parse(localStorage.getItem(PRODUCT_KEY));return Array.isArray(p)?p:SAMPLE_PRODUCTS;}catch{return SAMPLE_PRODUCTS;}})();
 let category="All", cart={};
 const $=id=>document.getElementById(id);
 const money=n=>"৳"+n.toLocaleString("en-BD");
@@ -26,10 +21,11 @@ function renderProducts(){
 function renderCart(){
   const entries=Object.entries(cart).filter(([,qty])=>qty>0);
   const count=entries.reduce((sum,[,qty])=>sum+qty,0);
-  const total=entries.reduce((sum,[id,qty])=>sum+products.find(p=>p.id===Number(id)).price*qty,0);
+  const total=entries.reduce((sum,[id,qty])=>sum+(products.find(p=>p.id===Number(id))?.price||0)*qty,0);
   $("cartCount").textContent=count;$("cartTotal").textContent=money(total);
   $("cartItems").innerHTML=entries.length?entries.map(([id,qty])=>{
     const p=products.find(x=>x.id===Number(id));
+    if(!p)return "";
     return `<div class="cart-row"><div class="cart-emoji">${p.emoji}</div><div class="cart-row-info"><strong>${p.name}</strong><small>${money(p.price)} each</small></div><div class="qty"><button data-qty="${id}" data-change="-1" aria-label="Decrease ${p.name}">−</button><span>${qty}</span><button data-qty="${id}" data-change="1" aria-label="Increase ${p.name}">+</button></div></div>`;
   }).join(""):`<p class="empty">Your cart is empty.<br>Add a product to get started.</p>`;
   $("checkoutButton").disabled=!entries.length;
@@ -46,3 +42,5 @@ $("checkoutButton").addEventListener("click",()=>{$("checkoutDialog").showModal(
 $("checkoutForm").addEventListener("submit",e=>{e.preventDefault();alert("Thanks! This is a demo checkout. No order or payment was sent.");cart={};renderCart();$("checkoutDialog").close();closeCart();e.target.reset();});
 $("year").textContent=new Date().getFullYear();
 renderProducts();renderCart();
+
+window.addEventListener("storage",e=>{if(e.key===PRODUCT_KEY){try{products=JSON.parse(e.newValue)||SAMPLE_PRODUCTS;}catch{products=SAMPLE_PRODUCTS;}cart={};renderProducts();renderCart();}});
